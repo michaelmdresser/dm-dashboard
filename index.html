@@ -10,19 +10,12 @@
     <table id="status-table">
       <tr id="status-table-header">
         <th>Name</th>
-        <th>Initiative</th>
+        <th id="initiative-header">Initiative</th>
         <th>Max Health</th>
         <th>Damage Taken</th>
+		<th>Damage</th>
         <th>Current Health</th>
         <th>Status Effects</th>
-      </tr>
-      <tr id="maris">
-        <td class="name">Maris</td>
-        <td class="initiative">16</td>
-        <td class="max-health">43</td>
-        <td class="damage-taken">0</td>
-        <td class="current-health"></td>
-        <td class="status-effects"></td>
       </tr>
       <tr id="new-player-row">
         <form id="new-player-form">
@@ -32,11 +25,15 @@
           <td/>
           <td/>
           <td/>
+		  <td/>
           <td><input type="submit" value="add"/></td>
           <td><input id="new-count" type="text" value="1"></td>
         </form>
       </tr>
     </table>
+	</div>
+
+	<div id="main-turn-order">
 	</div>
 
   <script src="script.js"></script>
