@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>DM Dashboard</title>
+  </head>
+  
+  <body>
+    <div id="main-status-table">
+    <table id="status-table">
+      <tr id="status-table-header">
+        <th>Name</th>
+        <th>Initiative</th>
+        <th>Max Health</th>
+        <th>Damage Taken</th>
+        <th>Current Health</th>
+        <th>Status Effects</th>
+      </tr>
+      <tr id="maris">
+        <td class="name">Maris</td>
+        <td class="initiative">16</td>
+        <td class="max-health">43</td>
+        <td class="damage-taken">0</td>
+        <td class="current-health"></td>
+        <td class="status-effects"></td>
+      </tr>
+      <tr id="new-player-row">
+        <form id="new-player-form">
+          <td><input type="text" id="new-name" name="new-name"/></td>
+          <td><input type="text" id="new-initiative", name="new-initiative"></td>
+          <td><input type="text", id="new-max-health", name="new-max-health"/></td>
+          <td/>
+          <td/>
+          <td/>
+          <td><input type="submit" value="add"/></td>
+          <td><input id="new-count" type="text" value="1"></td>
+        </form>
+      </tr>
+    </table>
+	</div>
+
+  <script src="script.js"></script>
+  </body>
+</html>
