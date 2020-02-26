@@ -74,6 +74,9 @@ function playerNameFromRowID(id) {
 function buildPlayerRow(player, isTurn) {
     var row = document.createElement("tr");
     row.id = playerRowIDFromName(player.name);
+    if (!player.isMonster) {
+        row.className += "player-row ";
+    }
     var cellName = document.createElement("td");
     var cellInitiative = document.createElement("td");
     var cellMaxHealth = document.createElement("td");
@@ -86,22 +89,55 @@ function buildPlayerRow(player, isTurn) {
     row.appendChild(cellCurrentHealth);
     row.appendChild(cellStatusEffects);
     row.appendChild(cellDamage);
+    var initiativeText = document.createElement("div");
+    initiativeText.innerText = String(player.initiative);
     cellName.innerText = player.name;
-    cellInitiative.innerText = String(player.initiative);
+    cellInitiative.appendChild(initiativeText);
     cellMaxHealth.innerText = String(player.maxHealth);
     cellCurrentHealth.innerText = String(player.currentHealth);
     cellStatusEffects.innerText = String(player.statusEffects);
+    var initiativeInput = document.createElement("input");
+    initiativeInput.type = "text";
+    initiativeInput.placeholder = "new initiative";
+    initiativeInput.addEventListener("keydown", function (event) {
+        if (event.keyCode != 13) {
+            return;
+        }
+        event.preventDefault();
+        var newInitiative = parseInt(initiativeInput.value);
+        if (isNaN(newInitiative)) {
+            newInitiative = player.initiative;
+        }
+        for (var i = 0; i <= currentState.players.length; i++) {
+            if (currentState.players[i] == player) {
+                currentState.players[i].initiative = newInitiative;
+            }
+        }
+        initiativeInput.value = "";
+        cellInitiative.innerHTML = "";
+        cellInitiative.appendChild(initiativeText);
+        update(currentState);
+    });
+    initiativeText.onclick = function (event) {
+        cellInitiative.innerHTML = "";
+        cellInitiative.appendChild(initiativeInput);
+        initiativeInput.focus();
+    };
+    initiativeInput.addEventListener("focusout", function (event) {
+        cellInitiative.innerHTML = "";
+        cellInitiative.appendChild(initiativeText);
+    });
     var damageInput = document.createElement("input");
-    // let damageButton = document.createElement("button");
     cellDamage.appendChild(damageInput);
-    // cellDamage.appendChild(damageButton);
     var damageThisPlayer = function (event) {
         if (event.keyCode != 13) {
             return;
         }
         event.preventDefault();
-        // let damageInput = event.currentTarget;
         var damageAmount = parseInt(damageInput.value);
+        if (isNaN(damageAmount)) {
+            return;
+        }
         for (var i = 0; i <= currentState.players.length; i++) {
             if (currentState.players[i] == player) {
                 currentState.players[i] = damagePlayer(currentState.players[i], damageAmount);
@@ -112,12 +148,14 @@ function buildPlayerRow(player, isTurn) {
     };
     damageInput.type = "text";
     damageInput.addEventListener("keydown", damageThisPlayer);
-    // damageButton.addEventListener("click", damageThisPlayer)
+    damageInput.placeholder = "Damage - Enter to apply";
     if (isTurn) {
-        row.style.color = "red";
+        // row.style.color = "red";
+        row.className += "isTurn ";
     }
     if (player.isDead) {
-        row.style.background = "grey";
+        // row.style.background = "grey";
+        row.className += "isDead ";
     }
     return row;
 }
@@ -205,6 +243,7 @@ function buildPlayerTable(players, turn) {
         update(currentState);
     });
     var table = document.createElement("table");
+    table.className += "fl-table";
     form.appendChild(table);
     var headerRow = document.createElement("tr");
     table.appendChild(headerRow);
@@ -220,24 +259,36 @@ function buildPlayerTable(players, turn) {
     return form;
 }
 function buildAdvanceTurnButton() {
-    var form = document.createElement("form");
-    form.id = "advance-turn-form";
     var button = document.createElement("input");
-    form.appendChild(button);
     button.type = "submit";
     button.value = "next turn";
-    form.addEventListener("submit", function (event) {
+    button.onclick = function (event) {
         event.preventDefault();
         currentState = advanceTurn(currentState);
         update(currentState);
-    });
-    return form;
+    };
+    return button;
+}
+function removeMonsters(players) {
+    return players.filter(function (player) { return !player.isMonster; });
+}
+function buildNewRoundButton() {
+    var button = document.createElement("input");
+    button.type = "submit";
+    button.value = "new round - remove monsters";
+    button.onclick = function (event) {
+        event.preventDefault();
+        currentState.players = removeMonsters(currentState.players);
+        update(currentState);
+    };
+    return button;
 }
 function reRenderPlayers(players, turn) {
     var tableDiv = document.getElementById("main-status-table");
     tableDiv.innerHTML = "";
     tableDiv.appendChild(buildPlayerTable(players, turn));
     tableDiv.appendChild(buildAdvanceTurnButton());
+    tableDiv.appendChild(buildNewRoundButton());
 }
 function advanceTurn(state) {
     console.log("advancing");
@@ -254,7 +305,27 @@ function advanceTurn(state) {
     return state;
 }
 function update(state) {
+    var currentTurnPlayer = state.players[state.turn];
+    state.players.sort(function (b, a) {
+        if (a.initiative < b.initiative) {
+            return -1;
+        }
+        else if (a.initiative > b.initiative) {
+            return 1;
+        }
+        else {
+            return a.initiativeModifier - b.initiativeModifier;
+        }
+    });
+    for (var i = 0; i < state.players.length; i++) {
+        if (state.players[i] === currentTurnPlayer) {
+            state.turn = i;
+            break;
+        }
+    }
     reRenderPlayers(state.players, state.turn);
 }
 currentState = testState;
+update(currentState);
+currentState.turn = 0;
 update(currentState);
