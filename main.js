@@ -1,3 +1,12 @@
+var newPlayerRowID = "new-player-row";
+var testPlayers = [
+    createPlayer("Odette", 3, 47, false),
+    createPlayer("Maris", 2, 45, false),
+    createPlayer("monster dead", 0, 0, true),
+    createPlayer("monster alive", 0, 10, true),
+];
+var testState = { players: testPlayers, turn: 0 };
+var currentState = { players: [], turn: 0 };
 function calculateTotalHealthChange(player) {
     return player.healthChanges.reduce(function (acc, change) { return acc + change; }, player.maxHealth);
 }
@@ -32,15 +41,6 @@ function damagePlayer(player, damage) {
     console.log("health after: " + player.currentHealth);
     return player;
 }
-var newPlayerRowID = "new-player-row";
-var testPlayers = [
-    createPlayer("Odette", 3, 47, false),
-    createPlayer("Maris", 2, 45, false),
-    createPlayer("monster dead", 0, 0, true),
-    createPlayer("monster alive", 0, 10, true),
-];
-var testState = { players: testPlayers, turn: 0 };
-var currentState = { players: [], turn: 0 };
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
 function getRandomInt(min, max) {
     min = Math.ceil(min);
@@ -187,6 +187,9 @@ function getNewPlayers() {
     var IDsInput = document.getElementById(newPlayerRowID + "_ids");
     var isMonsterInput = document.getElementById(newPlayerRowID + "_ismonster");
     var ids = IDsInput.value.split(",").map(function (id) { return id.trim(); });
+    if (nameInput.value.length == 0 || isNaN(parseInt(initiativeInput.value)) || isNaN(parseInt(maxHealthInput.value))) {
+        return [];
+    }
     if (ids.length <= 1) {
         return [createPlayer(nameInput.value, parseInt(initiativeInput.value), parseInt(maxHealthInput.value), isMonsterInput.checked)];
     }
@@ -204,6 +207,16 @@ function resetNewPlayer() {
     var inputs = [nameInput, initiativeInput, maxHealthInput, IDsInput];
     inputs.map(function (input) { return input.value = ""; });
 }
+function addNewPlayer(event) {
+    if (event.keyCode != 13) {
+        return;
+    }
+    event.preventDefault();
+    var newPlayers = getNewPlayers();
+    newPlayers.map(function (player) { return currentState.players.push(player); });
+    resetNewPlayer();
+    update(currentState);
+}
 function buildNewPlayerRow() {
     var row = document.createElement("tr");
     row.id = newPlayerRowID;
@@ -212,7 +225,7 @@ function buildNewPlayerRow() {
     var cellMaxHealth = document.createElement("td");
     var cellCurrentHealth = document.createElement("td");
     var cellStatusEffects = document.createElement("td");
-    var cellButton = document.createElement("td");
+    //let cellButton = document.createElement("td");
     var cellIDs = document.createElement("td");
     var cellIsMonster = document.createElement("td");
     row.appendChild(cellName);
@@ -220,51 +233,61 @@ function buildNewPlayerRow() {
     row.appendChild(cellMaxHealth);
     row.appendChild(cellCurrentHealth);
     row.appendChild(cellStatusEffects);
-    row.appendChild(cellButton);
+    //row.appendChild(cellButton);
     row.appendChild(cellIDs);
     row.appendChild(cellIsMonster);
     var nameInput = document.createElement("input");
     var initiativeInput = document.createElement("input");
     var maxHealthInput = document.createElement("input");
-    var button = document.createElement("input");
+    //let button = document.createElement("input");
     var IDsInput = document.createElement("input");
     var isMonsterInput = document.createElement("input");
     cellName.appendChild(nameInput);
     cellInitiative.appendChild(initiativeInput);
     cellMaxHealth.appendChild(maxHealthInput);
-    cellButton.appendChild(button);
+    //cellButton.appendChild(button);
     cellIDs.appendChild(IDsInput);
     cellIsMonster.appendChild(isMonsterInput);
     nameInput.type = "text";
     nameInput.id = newPlayerRowID + "_name";
+    nameInput.placeholder = "Name";
+    nameInput.addEventListener("keydown", addNewPlayer);
     initiativeInput.type = "text";
     initiativeInput.id = newPlayerRowID + "_initiative";
+    initiativeInput.placeholder = "initiative mod";
+    initiativeInput.addEventListener("keydown", addNewPlayer);
     maxHealthInput.type = "text";
     maxHealthInput.id = newPlayerRowID + "_maxhealth";
-    button.type = "submit";
-    button.id = newPlayerRowID + "_button";
-    button.value = "add";
+    maxHealthInput.placeholder = "max health";
+    maxHealthInput.addEventListener("keydown", addNewPlayer);
+    //button.type = "submit";
+    //button.id = newPlayerRowID + "_button";
+    //button.value = "add";
+    //button.onclick = addNewPlayer;
     IDsInput.type = "text";
     IDsInput.id = newPlayerRowID + "_ids";
+    IDsInput.placeholder = "ids for multi-add";
+    IDsInput.addEventListener("keydown", addNewPlayer);
     isMonsterInput.type = "checkbox";
     isMonsterInput.id = newPlayerRowID + "_ismonster";
     isMonsterInput.checked = true;
+    isMonsterInput.addEventListener("keydown", addNewPlayer);
     return row;
 }
 function buildPlayerTable(players, turn) {
     var columns = ["Name", "Initiative", "Max Health", "Current Health", "Status Effects"];
-    var form = document.createElement("form");
-    form.id = newPlayerRowID + "_form";
-    form.addEventListener("submit", function (event) {
-        event.preventDefault();
-        var players = getNewPlayers();
-        resetNewPlayer();
-        players.map(function (player) { return currentState.players.push(player); });
-        update(currentState);
-    });
+    // let form = document.createElement("form");
+    // form.id = newPlayerRowID + "_form";
+    // form.addEventListener("submit", function(event) {
+    // 		event.preventDefault();
+    // 		let players = getNewPlayers();
+    // 		resetNewPlayer();
+    // 		players.map(player => currentState.players.push(player));
+    // 		update(currentState);
+    // })
     var table = document.createElement("table");
     table.className += "fl-table";
-    form.appendChild(table);
+    // form.appendChild(table);
     var headerRow = document.createElement("tr");
     table.appendChild(headerRow);
     var columnHeaders = columns.map(function (columnName) {
@@ -276,7 +299,7 @@ function buildPlayerTable(players, turn) {
     players.map(function (player, index) { return table.appendChild(buildPlayerRow(player, index == turn)); });
     var newPlayerRow = buildNewPlayerRow();
     table.appendChild(newPlayerRow);
-    return form;
+    return table;
 }
 function buildAdvanceTurnButton() {
     var button = document.createElement("input");
@@ -345,7 +368,7 @@ function update(state) {
     }
     reRenderPlayers(state.players, state.turn);
 }
-currentState = testState;
+// currentState = testState;
 update(currentState);
 currentState.turn = 0;
 update(currentState);
