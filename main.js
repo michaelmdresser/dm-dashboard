@@ -34,8 +34,8 @@ function damagePlayer(player, damage) {
 }
 var newPlayerRowID = "new-player-row";
 var testPlayers = [
-    createPlayer("odette", 3, 47, false),
-    createPlayer("maris", 2, 45, false),
+    createPlayer("Odette", 3, 47, false),
+    createPlayer("Maris", 2, 45, false),
     createPlayer("monster dead", 0, 0, true),
     createPlayer("monster alive", 0, 10, true),
 ];
@@ -83,12 +83,14 @@ function buildPlayerRow(player, isTurn) {
     var cellCurrentHealth = document.createElement("td");
     var cellStatusEffects = document.createElement("td");
     var cellDamage = document.createElement("td");
+    var cellDelete = document.createElement("td");
     row.appendChild(cellName);
     row.appendChild(cellInitiative);
     row.appendChild(cellMaxHealth);
     row.appendChild(cellCurrentHealth);
     row.appendChild(cellStatusEffects);
     row.appendChild(cellDamage);
+    row.appendChild(cellDelete);
     var initiativeText = document.createElement("div");
     initiativeText.innerText = String(player.initiative);
     cellName.innerText = player.name;
@@ -149,6 +151,24 @@ function buildPlayerRow(player, isTurn) {
     damageInput.type = "text";
     damageInput.addEventListener("keydown", damageThisPlayer);
     damageInput.placeholder = "Damage - Enter to apply";
+    var deleteInput = document.createElement("input");
+    cellDelete.appendChild(deleteInput);
+    deleteInput.type = "submit";
+    deleteInput.value = "delete";
+    deleteInput.onclick = function (event) {
+        event.preventDefault();
+        for (var i = 0; i <= currentState.players.length; i++) {
+            if (currentState.players[i] === player) {
+                currentState.players.splice(i, 1);
+                if (currentState.turn > i) {
+                    currentState.turn -= 2;
+                    currentState = advanceTurn(currentState);
+                }
+                break;
+            }
+        }
+        update(currentState);
+    };
     if (isTurn) {
         // row.style.color = "red";
         row.className += "isTurn ";

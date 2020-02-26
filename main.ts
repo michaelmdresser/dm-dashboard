@@ -59,8 +59,8 @@ function damagePlayer(player: Player, damage: number): Player {
 let newPlayerRowID = "new-player-row";
 
 let testPlayers: Player[] = [
-		createPlayer("odette", 3, 47, false),
-		createPlayer("maris", 2, 45, false),
+		createPlayer("Odette", 3, 47, false),
+		createPlayer("Maris", 2, 45, false),
 		createPlayer("monster dead", 0, 0, true),
 		createPlayer("monster alive", 0, 10, true),
 ]
@@ -115,12 +115,14 @@ function buildPlayerRow(player: Player, isTurn: boolean): HTMLTableRowElement {
 		let cellCurrentHealth = document.createElement("td");
 		let cellStatusEffects = document.createElement("td");
 		let cellDamage = document.createElement("td");
+		let cellDelete = document.createElement("td");
 		row.appendChild(cellName);
 		row.appendChild(cellInitiative);
 		row.appendChild(cellMaxHealth);
 		row.appendChild(cellCurrentHealth);
 		row.appendChild(cellStatusEffects);
 		row.appendChild(cellDamage);
+		row.appendChild(cellDelete);
 
 		let initiativeText = document.createElement("div");
 		initiativeText.innerText = String(player.initiative);
@@ -185,6 +187,25 @@ function buildPlayerRow(player: Player, isTurn: boolean): HTMLTableRowElement {
 		damageInput.type = "text";
 		damageInput.addEventListener("keydown", damageThisPlayer);
 		damageInput.placeholder = "Damage - Enter to apply";
+
+		let deleteInput = document.createElement("input");
+		cellDelete.appendChild(deleteInput);
+		deleteInput.type = "submit";
+		deleteInput.value = "delete";
+		deleteInput.onclick = event => {
+				event.preventDefault();
+				for (var i = 0; i <= currentState.players.length; i++) {
+						if (currentState.players[i] === player) {
+								currentState.players.splice(i,1);
+								if (currentState.turn > i) {
+										currentState.turn -= 2;
+										currentState = advanceTurn(currentState);
+								}
+								break;
+						}
+				}
+				update(currentState);
+		};
 
 		if (isTurn) {
 				// row.style.color = "red";
@@ -360,7 +381,7 @@ function reRenderPlayers(players: Player[], turn: number) {
 		tableDiv.appendChild(buildNewRoundButton());
 }
 
-function advanceTurn(state: State) {
+function advanceTurn(state: State): State {
 		console.log("advancing");
 		let allPlayersAreDead = state.players.reduce((allAreDead, player) => allAreDead && player.isDead, true);
 		if (allPlayersAreDead) {
