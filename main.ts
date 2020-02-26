@@ -17,6 +17,19 @@ interface State {
 		turn: number;
 }
 
+let newPlayerRowID = "new-player-row";
+
+let testPlayers: Player[] = [
+		createPlayer("Odette", 3, 47, false),
+		createPlayer("Maris", 2, 45, false),
+		createPlayer("monster dead", 0, 0, true),
+		createPlayer("monster alive", 0, 10, true),
+]
+
+let testState: State = { players: testPlayers, turn: 0 }
+
+var currentState: State = { players: [], turn: 0 }
+
 function calculateTotalHealthChange(player: Player): number {
 		return player.healthChanges.reduce((acc, change) => acc + change, player.maxHealth);
 }
@@ -55,19 +68,6 @@ function damagePlayer(player: Player, damage: number): Player {
 
 		return player
 }
-
-let newPlayerRowID = "new-player-row";
-
-let testPlayers: Player[] = [
-		createPlayer("Odette", 3, 47, false),
-		createPlayer("Maris", 2, 45, false),
-		createPlayer("monster dead", 0, 0, true),
-		createPlayer("monster alive", 0, 10, true),
-]
-
-let testState: State = { players: testPlayers, turn: 0 }
-
-var currentState: State = { players: [], turn: 0 }
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
 function getRandomInt(min: number, max: number): number {
@@ -228,6 +228,10 @@ function getNewPlayers(): Player[] {
 		let isMonsterInput = document.getElementById(newPlayerRowID + "_ismonster") as HTMLInputElement;
 		let ids = IDsInput.value.split(",").map(id => id.trim());
 
+		if (nameInput.value.length == 0 || isNaN(parseInt(initiativeInput.value)) || isNaN(parseInt(maxHealthInput.value))) {
+				return [];
+		}
+
 		if (ids.length <= 1) {
 				return [createPlayer(
 						 nameInput.value,
@@ -255,6 +259,17 @@ function resetNewPlayer() {
 		inputs.map(input => input.value = "")
 }
 
+function addNewPlayer(event) {
+		if (event.keyCode != 13) { return; }
+		event.preventDefault();
+
+		let newPlayers = getNewPlayers();
+		newPlayers.map(player => currentState.players.push(player));
+		resetNewPlayer();
+		
+		update(currentState);
+}
+
 function buildNewPlayerRow(): HTMLTableRowElement {
 		let row = document.createElement("tr");
 		row.id = newPlayerRowID;
@@ -264,7 +279,7 @@ function buildNewPlayerRow(): HTMLTableRowElement {
 		let cellMaxHealth = document.createElement("td");
 		let cellCurrentHealth = document.createElement("td");
 		let cellStatusEffects = document.createElement("td");
-		let cellButton = document.createElement("td");
+		//let cellButton = document.createElement("td");
 		let cellIDs = document.createElement("td");
 		let cellIsMonster = document.createElement("td");
 		row.appendChild(cellName);
@@ -272,57 +287,67 @@ function buildNewPlayerRow(): HTMLTableRowElement {
 		row.appendChild(cellMaxHealth);
 		row.appendChild(cellCurrentHealth);
 		row.appendChild(cellStatusEffects);
-		row.appendChild(cellButton);
+		//row.appendChild(cellButton);
 		row.appendChild(cellIDs);
 		row.appendChild(cellIsMonster);
 		
 		let nameInput = document.createElement("input");
 		let initiativeInput = document.createElement("input");
 		let maxHealthInput = document.createElement("input");
-		let button = document.createElement("input");
+		//let button = document.createElement("input");
 		let IDsInput = document.createElement("input")
 		let isMonsterInput = document.createElement("input")
 		cellName.appendChild(nameInput);
 		cellInitiative.appendChild(initiativeInput);
 		cellMaxHealth.appendChild(maxHealthInput);
-		cellButton.appendChild(button);
+		//cellButton.appendChild(button);
 		cellIDs.appendChild(IDsInput);
 		cellIsMonster.appendChild(isMonsterInput);
 
 		nameInput.type = "text";
 		nameInput.id = newPlayerRowID + "_name";
+		nameInput.placeholder = "Name";
+		nameInput.addEventListener("keydown", addNewPlayer);
 		initiativeInput.type = "text";
 		initiativeInput.id = newPlayerRowID + "_initiative";
+		initiativeInput.placeholder = "initiative mod";
+		initiativeInput.addEventListener("keydown", addNewPlayer);
 		maxHealthInput.type = "text";
 		maxHealthInput.id = newPlayerRowID + "_maxhealth";
-		button.type = "submit";
-		button.id = newPlayerRowID + "_button";
-		button.value = "add";
+		maxHealthInput.placeholder = "max health";
+		maxHealthInput.addEventListener("keydown", addNewPlayer);
+		//button.type = "submit";
+		//button.id = newPlayerRowID + "_button";
+		//button.value = "add";
+		//button.onclick = addNewPlayer;
 		IDsInput.type = "text";
 		IDsInput.id = newPlayerRowID + "_ids";
+		IDsInput.placeholder = "ids for multi-add";
+		IDsInput.addEventListener("keydown", addNewPlayer);
 		isMonsterInput.type = "checkbox";
 		isMonsterInput.id = newPlayerRowID + "_ismonster";
 		isMonsterInput.checked = true;
+		isMonsterInput.addEventListener("keydown", addNewPlayer);
 
 		return row;
 }
 
-function buildPlayerTable(players: Player[], turn: number): HTMLFormElement {
+function buildPlayerTable(players: Player[], turn: number): HTMLTableElement {
 
 		let columns: string[] = ["Name", "Initiative", "Max Health", "Current Health", "Status Effects"];
-		let form = document.createElement("form");
-		form.id = newPlayerRowID + "_form";
-		form.addEventListener("submit", function(event) {
-				event.preventDefault();
-				let players = getNewPlayers();
-				resetNewPlayer();
-				players.map(player => currentState.players.push(player));
-				update(currentState);
-		})
+		// let form = document.createElement("form");
+		// form.id = newPlayerRowID + "_form";
+		// form.addEventListener("submit", function(event) {
+		// 		event.preventDefault();
+		// 		let players = getNewPlayers();
+		// 		resetNewPlayer();
+		// 		players.map(player => currentState.players.push(player));
+		// 		update(currentState);
+		// })
 
 		let table = document.createElement("table");
 		table.className += "fl-table";
-		form.appendChild(table);
+		// form.appendChild(table);
 
 		let headerRow = document.createElement("tr");
 		table.appendChild(headerRow)
@@ -339,7 +364,7 @@ function buildPlayerTable(players: Player[], turn: number): HTMLFormElement {
 		let newPlayerRow = buildNewPlayerRow();
 		table.appendChild(newPlayerRow);
 
-		return form;
+		return table;
 }
 
 function buildAdvanceTurnButton(): HTMLInputElement {
