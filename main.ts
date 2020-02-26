@@ -420,7 +420,7 @@ function update(state: State) {
 		reRenderPlayers(state.players, state.turn);
 }
 
-currentState = testState;
+// currentState = testState;
 update(currentState);
 currentState.turn = 0;
 update(currentState);
